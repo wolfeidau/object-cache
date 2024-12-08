@@ -1,0 +1,29 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "commands",
+    srcs = [
+        "client.go",
+        "commands.go",
+        "lambda.go",
+        "server.go",
+    ],
+    importpath = "github.com/wolfeidau/object-cache/services/store/internal/commands",
+    visibility = ["//services/store:__subpackages__"],
+    deps = [
+        "//libs/middleware",
+        "//libs/trace",
+        "//services/store/internal/server",
+        "//services/store/pkg/api",
+        "@com_github_aws_aws_lambda_go//lambda",
+        "@com_github_awslabs_aws_lambda_go_api_proxy//httpadapter",
+        "@com_github_labstack_echo_v4//:echo",
+        "@com_github_rs_zerolog//:zerolog",
+        "@com_github_rs_zerolog//log",
+        "@com_github_wolfeidau_echo_middleware//:echo-middleware",
+        "@com_github_wolfeidau_lambda_go_extras//lambdaextras",
+        "@com_github_wolfeidau_lambda_go_extras//middleware",
+        "@com_github_wolfeidau_lambda_go_extras_middleware_raw//:raw",
+        "@com_github_wolfeidau_lambda_go_extras_middleware_zerolog//:zerolog",
+    ],
+)

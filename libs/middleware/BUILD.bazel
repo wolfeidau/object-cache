@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "middleware",
+    srcs = ["oidc.go"],
+    importpath = "github.com/wolfeidau/object-cache/libs/middleware",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//services/store/pkg/api",
+        "@com_github_labstack_echo_v4//:echo",
+        "@com_github_lestrrat_go_httprc_v3//:httprc",
+        "@com_github_lestrrat_go_jwx_v3//jwk",
+        "@com_github_lestrrat_go_jwx_v3//jwt",
+        "@com_github_rs_zerolog//log",
+    ],
+)
+
+go_test(
+    name = "middleware_test",
+    srcs = ["oidc_test.go"],
+    embed = [":middleware"],
+)
