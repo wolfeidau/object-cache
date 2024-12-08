@@ -1,0 +1,9 @@
+go 1.23.3
+
+use (
+	.
+	./libs/middleware
+	./libs/trace
+	./services/admin
+	./services/store
+)
