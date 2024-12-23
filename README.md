@@ -9,13 +9,13 @@ This project uses [Bazel](https://bazel.build/) as the build system and Open Con
 To build the project, run the following command:
 
 ```bash
-bazel build //...
+make build
 ```
 
 To  run the tests, run the following command:
 
 ```bash
-bazel test //...
+make test
 ```
 
 To export the container image, run the following command:
