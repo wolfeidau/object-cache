@@ -1,0 +1,28 @@
+# requires BAZEL_CACHE_ROLE and BAZEL_CACHE_BUCKET to be set in the environment
+cache:
+  paths:
+    - ".cache" # Bazel cache volume
+  size: "20g"
+
+steps:
+  - label: ":bazel: build"
+    key: bazel-build
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: ${BAZEL_CACHE_ROLE}
+      - docker-compose#v5.3.0:
+          run: app
+          config: .buildkite/docker-compose.yml
+          shell: false
+          command: ["build", "--config=buildkite", "--", "//..."]
+  - label: ":bazel: test"
+    key: bazel-test
+    depends_on: [bazel-build]
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: ${BAZEL_CACHE_ROLE}
+      - docker-compose#v5.3.0:
+          run: app
+          config: .buildkite/docker-compose.yml
+          shell: false
+          command: ["test", "--config=buildkite", "--", "//..."]

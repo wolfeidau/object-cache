@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Outputs:
+  BuildkiteOidc:
+    Value: !Ref BuildkiteOidc
+    Export:
+      Name: !Sub "${AWS::StackName}-BuildkiteOidc"
+
+Resources:
+  BuildkiteOidc:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://agent.buildkite.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 9e99a48a9960b14926bb7f3b02e22da2b0ab7280
