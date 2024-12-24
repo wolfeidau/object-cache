@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:
+  "wolfeidau: Cloudformation bazel cache infra including OIDC access role."
+
+Parameters:
+  BuildkiteOidc:
+    Type: String
+    Description: The OIDC provider ARN for Buildkite
+  OrginizationSlug:
+    Type: String
+    Description: The slug of the Buildkite organization
+  PipelineSlug:
+    Type: String
+    Description: The slug of the Buildkite pipeline
+
+Outputs:
+  CacheBucketName:
+    Value:
+      Ref: CacheBucket
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-BucketName"
+  CacheBucketAccessRole:
+    Value: !GetAtt CacheBucketAccessRole.Arn
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-CacheBucketAccessRole"
+
+Resources:
+  CacheBucketAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref BuildkiteOidc
+            Condition:
+              StringEquals:
+                "agent.buildkite.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "agent.buildkite.com:sub": !Sub "organization:${OrginizationSlug}:pipeline:${PipelineSlug}:*"
+
+  CacheBucketAccessPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "root"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetBucketLocation
+              - s3:GetObjectVersion
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetLifecycleConfiguration
+              - s3:PutLifecycleConfiguration
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${CacheBucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${CacheBucket}/*"
+      Roles:
+        - Ref: "CacheBucketAccessRole"
+
+  CacheBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: True
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: CacheBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:*
+            Resource:
+              - Fn::Sub: arn:aws:s3:::${CacheBucket}/*
+              - Fn::Sub: arn:aws:s3:::${CacheBucket}
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  CacheBucketParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: /config/${AWS::StackName}/bazel_cache_bucket
+      Type: String
+      Value:
+        Ref: CacheBucket
+
+  CacheBucketAccessRoleParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: /config/${AWS::StackName}/bazel_cache_bucket_access_role
+      Type: String
+      Value: !GetAtt CacheBucketAccessRole.Arn
