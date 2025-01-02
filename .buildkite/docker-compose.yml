@@ -8,6 +8,8 @@ services:
         "--experimental_remote_asset_api",
         "--profile_port=0",
         "--s3.auth_method=access_key",
+        "--s3.prefix=object-cache",
+        "--s3.update_timestamps",
         "--enable_endpoint_metrics",
       ]
     restart: always
