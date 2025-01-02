@@ -8,10 +8,12 @@ services:
         "--experimental_remote_asset_api",
         "--profile_port=0",
         "--s3.auth_method=access_key",
+        "--s3.prefix=object-cache",
+        "--s3.update_timestamps",
         "--enable_endpoint_metrics",
       ]
     restart: always
-    image: buchgr/bazel-remote-cache:v2.3.3
+    image: buchgr/bazel-remote-cache:v2.4.4
     user: 0:0
     environment:
       BAZEL_REMOTE_S3_BUCKET: $BAZEL_CACHE_BUCKET
